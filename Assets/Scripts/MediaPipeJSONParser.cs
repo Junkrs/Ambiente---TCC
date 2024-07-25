@@ -35,8 +35,20 @@ public class MediaPipeJSONParser : MonoBehaviour
     void Start()
     {
         //Recuperar arquivo(s) JSON dos Resources
-        var jsonFile = Resources.Load<TextAsset>(jsonFilePath + "Abacaxi_Articulador1.mp4_landmarks");
-        VideoObject videoObject = VideoObject.CreateFromJSON(jsonFile.ToString());
+        //Aqui tem um erro de leitura, se nao colocar o path completo ele nao encontra o .json
+        var jsonString = Resources.Load<TextAsset>("JSON/ProcessedJSON/Abacaxi_Articulador1.mp4_landmarks");
+        if (jsonString == null)
+        {
+            Debug.LogError("JSON file not found or failed to load.");
+            return;
+        }
+        //Debug.Log("Funciona a leitura");
+        VideoObject videoObject = VideoObject.CreateFromJSON(jsonString.text);
+        if (videoObject == null)
+        {
+            Debug.LogError("Failed to parse JSON.");
+            return;
+        }
 
         //Testando a recuperação do JSON
         Debug.Log($"Nome do Objeto: {videoObject.videoName}");
