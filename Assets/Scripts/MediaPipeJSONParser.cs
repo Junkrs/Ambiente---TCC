@@ -58,10 +58,17 @@ public class MediaPipeJSONParser : MonoBehaviour
         for (int i = 0; i < videoObject.landmarks_quadros.Count; i++)
         {
             var frame = videoObject.landmarks_quadros[i];
-            Debug.Log($"Quadro {i}:");/* ERROS ERROS ERROS EU N AGUENTO MAIS
-            for (int j = 0; j < frame.pontos[Ponto]; j++)
+            Debug.Log($"Quadro {i}:");
+
+            // ERROS ERROS ERROS EU N AGUENTO MAIS
+            //A leitura dos pontos não está funcionando, não tenho ideia do que seja 
+            for (int j = 0; j < frame.pontos.Count ; j++)
             {
-                Debug.Log($"Ponto: {j} - x: {ponto.Value.x}, y: {ponto.Value.y}, z: {ponto.Value.z}");
+                var pontosDict = frame.pontos[j];
+                foreach (var ponto in pontosDict)
+                {
+                    Debug.Log($"Ponto: {ponto.Key} - x: {ponto.Value.x}, y: {ponto.Value.y}, z: {ponto.Value.z}");
+                }
             }
             /*foreach (var pontosDict in frame.pontos)
             {
