@@ -11,16 +11,22 @@ public class Ponto
 }
 
 [System.Serializable]
+public class Landmark
+{
+    public Ponto ponto; //Coordenadas
+}
+
+[System.Serializable]
 public class Frame
 {
-    public List<Dictionary<string, Ponto>> pontos; //Lista dos pontos
+    public Dictionary<string, Landmark[]> quadro; //Map of frame name to landmarks
 }
 
 [System.Serializable]
 public class VideoObject
 {
     public string nome_video;
-    public List<Frame> landmarks_quadros; // Lista dos frames
+    public List<Frame> landmarks_quadros; //List of frames
 
     public static VideoObject CreateFromJSON(string jsonString)
     {
@@ -58,25 +64,14 @@ public class MediaPipeJSONParser : MonoBehaviour
         for (int i = 0; i < videoObject.landmarks_quadros.Count; i++)
         {
             var frame = videoObject.landmarks_quadros[i];
-            Debug.Log($"Quadro {i}:");
-
-            // ERROS ERROS ERROS EU N AGUENTO MAIS
-            //A leitura dos pontos não está funcionando, não tenho ideia do que seja 
-            for (int j = 0; j < frame.pontos.Count ; j++)
+            foreach (var quadro in frame.quadro)
             {
-                var pontosDict = frame.pontos[j];
-                foreach (var ponto in pontosDict)
+                Debug.Log($"Quadro: {quadro.Key}");
+                foreach (var pontos in quadro.Value)
                 {
-                    Debug.Log($"Ponto: {ponto.Key} - x: {ponto.Value.x}, y: {ponto.Value.y}, z: {ponto.Value.z}");
+                    Debug.Log($"Ponto - x: {pontos.ponto.x}, y: {pontos.ponto.y}, z: {pontos.ponto.z}");
                 }
             }
-            /*foreach (var pontosDict in frame.pontos)
-            {
-                foreach (var ponto in pontosDict)
-                {
-                    
-                }
-            }*/
         }
     }
 }
