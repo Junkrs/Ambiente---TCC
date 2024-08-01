@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [System.Serializable]
-public class Ponto
+public class Ponto // Coordenadas de cada um dos landmarks
 {
     public float x;
     public float y;
@@ -13,20 +14,28 @@ public class Ponto
 [System.Serializable]
 public class Landmark
 {
-    public Ponto ponto; //Coordenadas
+    //public string point_name; //Nome de cada landmark
+    //public float x;
+    //public float y;
+    //public float z;
+    public Dictionary<string, float> coordenadas;
+    //public int num; //Num. de cada landmark baseado na documentacao
+    //public Ponto ponto; //Coordenadas
 }
 
 [System.Serializable]
 public class Frame
 {
-    public Dictionary<string, Landmark[]> quadro; //Map of frame name to landmarks
+    //public string frame_count; //Num. de cada quadro
+    //public Dictionary<string, Landmark>[] pose_landmarks; //Vetor com todos os landmarks do quadro
+    public Landmark[] pose_landmarks; //Vetor com todos os landmarks do quadro
 }
 
 [System.Serializable]
 public class VideoObject
 {
     public string nome_video;
-    public List<Frame> landmarks_quadros; //List of frames
+    public Frame[] landmarks_quadros; //Vetor com todos os quadros
 
     public static VideoObject CreateFromJSON(string jsonString)
     {
@@ -45,7 +54,7 @@ public class MediaPipeJSONParser : MonoBehaviour
         //Aqui tem um erro de leitura, se nao colocar o path completo ele nao encontra o .json
 
         //var jsonFile = Resources.Load<TextAsset>(jsonFilePath + "Abacaxi_Articulador1.mp4_landmarks");
-        var jsonFile = Resources.Load<TextAsset>("JSON/ProcessedJSON/Abacaxi_Articulador1.mp4_landmarks");
+        var jsonFile = Resources.Load<TextAsset>("JSON/abacaxi_articulador1.mp4_landmarks");
         if (jsonFile == null)
         {
             Debug.LogError("JSON file not found or failed to load.");
@@ -61,17 +70,17 @@ public class MediaPipeJSONParser : MonoBehaviour
 
         //Testando a recuperação do JSON
         Debug.Log($"Nome do Objeto: {videoObject.nome_video}");
-        for (int i = 0; i < videoObject.landmarks_quadros.Count; i++)
+        Debug.Log($"Quantidade de quadros: {videoObject.landmarks_quadros.Length}");
+        Debug.Log($"Quantidade de pontos: {videoObject.landmarks_quadros[0].pose_landmarks.Length}");
+        Debug.Log($"Valor: {videoObject.landmarks_quadros[0].pose_landmarks[0].coordenadas.Values}");
+        //Debug.Log(jsonFile.text);
+        /*foreach (var frame in videoObject.landmarks_quadros)
         {
-            var frame = videoObject.landmarks_quadros[i];
-            foreach (var quadro in frame.quadro)
+            Debug.Log($"Quadro: {frame.frame_count}");
+            foreach (var landmark in frame.pose_landmarks)
             {
-                Debug.Log($"Quadro: {quadro.Key}");
-                foreach (var pontos in quadro.Value)
-                {
-                    Debug.Log($"Ponto - x: {pontos.ponto.x}, y: {pontos.ponto.y}, z: {pontos.ponto.z}");
-                }
+                Debug.Log($"Landmark {landmark.num} - {landmark.point_name}: x: {landmark.ponto.x}, y: {landmark.ponto.y}, z: {landmark.ponto.z}");
             }
-        }
+        }*/
     }
 }
