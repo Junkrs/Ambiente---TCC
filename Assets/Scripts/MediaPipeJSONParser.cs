@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEditor;
+using UnityEditor.Scripting.Python;
 
 [System.Serializable]
 public class Ponto // Coordenadas de cada um dos landmarks
