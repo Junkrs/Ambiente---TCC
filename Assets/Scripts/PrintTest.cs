@@ -2,11 +2,10 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.Scripting.Python;
 
-public class MenuItem_PrintTest_Class : MonoBehaviour
+public class PrintTest : MonoBehaviour
 {
-   [MenuItem("Python Scripts/PrintTest.py")]
-   public static void PrintTest()
+   void Start()
    {
        PythonRunner.RunFile("Assets/Scripts/PrintTest.py");
    }
-};
+}
