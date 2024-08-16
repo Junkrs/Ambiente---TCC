@@ -3,7 +3,7 @@ import json
 
 # Caminho do arquivo
 try:
-    file_path = r"C:/Users/junqu/Documents/GitHub/Ambiente---TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"
+    file_path = r"C:/Users/Gabriel Junqueira/Desktop/Unity Projects/Ambiente - TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"
     with open(file_path, 'r') as file:
         data = json.load(file)
         UnityEngine.Debug.Log("JSON file loaded successfully!")
@@ -15,7 +15,7 @@ if 'nome_video' in data:
         video_name = data['nome_video']
         UnityEngine.Debug.Log(f"Nome do video: {video_name}")
 else:
-    UnityEngine.Debug.Error("'nome_video' not found in JSON data.")
+    UnityEngine.Debug.Log("'nome_video' not found in JSON data.")
 
 # Iterate over each frame in the video
 for frame in data['landmarks_quadros']:
