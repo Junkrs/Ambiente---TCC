@@ -6,6 +6,6 @@ public class MPpythonJSONparser : MonoBehaviour
 {
     void Start()
     {
-       PythonRunner.RunFile("Assets/Scripts/MPpythonJSONparser.py");
+        PythonRunner.RunFile("Assets/Scripts/MPpythonJSONparser.py");
     }
 }

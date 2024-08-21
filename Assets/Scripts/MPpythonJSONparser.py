@@ -33,3 +33,4 @@ for frame in data['landmarks_quadros']:
                 y = coordinates['y']
                 z = coordinates['z']
                 UnityEngine.Debug.Log(f"{ponto_name} - x: {x}, y: {y}, z: {z}")
+                
