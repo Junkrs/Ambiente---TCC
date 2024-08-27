@@ -21,16 +21,43 @@ if 'nome_video' in data:
 else:
     UnityEngine.Debug.LogError("'nome_video' not found in JSON data.")
 
-# Iteracao em cada um dos frames do video
-for frame in data['landmarks_quadros']:
-    for quadro_name, pontos in frame.items():
+# Create spheres and store them in a dictionary
+spheres = {}
+first_frame = data['landmarks_quadros'][0]
+for quadro_name, pontos in first_frame.items():
+    for ponto in pontos:
+        for ponto_name, coordinates in ponto.items():
+            sphere = UnityEngine.GameObject.CreatePrimitive(UnityEngine.PrimitiveType.Sphere)
+            sphere.name = ponto_name
+            sphere.transform.position = UnityEngine.Vector3(coordinates['x'], (coordinates['y'] * -1) + 1.25, (coordinates['z'] * -1) - 2) 
 
-        UnityEngine.Debug.Log(f"Quadro: {quadro_name}")
-        # Iteracao em cada um dos pontos
-        for ponto in pontos:
-            for ponto_name, coordinates in ponto.items():
-                x = coordinates['x']
-                y = coordinates['y']
-                z = coordinates['z']
-                UnityEngine.Debug.Log(f"{ponto_name} - x: {x}, y: {y}, z: {z}")
-                
+            scale_factor = 0.05
+            sphere.transform.localScale = UnityEngine.Vector3(scale_factor, scale_factor, scale_factor)
+            sphere_renderer = sphere.GetComponent(UnityEngine.Renderer)
+            sphere_renderer.material.color = UnityEngine.Color.red
+
+            spheres[ponto_name] = sphere
+
+# Time tracking
+start_time = UnityEngine.Time.time
+delay = 10.0  # 10 seconds delay
+
+# Move spheres after the delay
+def update():
+    current_time = UnityEngine.Time.time
+    if current_time - start_time >= delay:
+        for i in range(1, len(data['landmarks_quadros'])):
+            current_frame = data['landmarks_quadros'][i]
+
+            for quadro_name, pontos in current_frame.items():
+                for ponto in pontos:
+                    for ponto_name, new_coordinates in ponto.items():
+                        if ponto_name in spheres:
+                            sphere = spheres[ponto_name]
+                            sphere.transform.position = UnityEngine.Vector3(new_coordinates['x'], new_coordinates['y'], new_coordinates['z'])
+
+            UnityEngine.Debug.Log(f"Updated positions for frame {i}")
+        # Reset the start_time to apply delay before the next frame
+        start_time = current_time
+
+UnityEngine.Debug.Log("Movement script initialized.")
