@@ -29,7 +29,12 @@ for quadro_name, pontos in first_frame.items():
         for ponto_name, coordinates in ponto.items():
             sphere = UnityEngine.GameObject.CreatePrimitive(UnityEngine.PrimitiveType.Sphere)
             sphere.name = ponto_name
-            sphere.transform.position = UnityEngine.Vector3(coordinates['x'], (coordinates['y'] * -1) + 1.25, (coordinates['z'] * -1) - 2) 
+
+            #escala relacioando ao tamanho do avatar //ignorar por enquanto pois ainda nao medi isso
+            avatarScaleFactor = 1.0
+
+            #transformacao da posicao das esferas
+            sphere.transform.position = UnityEngine.Vector3(coordinates['x'] * avatarScaleFactor, 1.0 - coordinates['y'] * avatarScaleFactor, -coordinates['z'] * avatarScaleFactor) 
 
             scale_factor = 0.05
             sphere.transform.localScale = UnityEngine.Vector3(scale_factor, scale_factor, scale_factor)
