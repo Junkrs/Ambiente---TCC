@@ -4,10 +4,10 @@ import json
 # Caminho do arquivo
 try:
     # Desktop
-    # file_path = r"C:/Users/junqu/Documents/GitHub/Ambiente---TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"
+    file_path = r"C:/Users/junqu/Documents/GitHub/Ambiente---TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"
     
     # Notebook
-    file_path = r"C:/Users/Gabriel Junqueira/Desktop/Unity Projects/Ambiente - TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"
+    # file_path = r"C:/Users/Gabriel Junqueira/Desktop/Unity Projects/Ambiente - TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"
     with open(file_path, 'r') as file:
         data = json.load(file)
         UnityEngine.Debug.Log("JSON file loaded successfully!")
@@ -22,47 +22,80 @@ else:
     UnityEngine.Debug.LogError("'nome_video' not found in JSON data.")
 
 # Create spheres and store them in a dictionary
-spheres = {}
-first_frame = data['landmarks_quadros'][0]
-for quadro_name, pontos in first_frame.items():
-    for ponto in pontos:
-        for ponto_name, coordinates in ponto.items():
-            sphere = UnityEngine.GameObject.CreatePrimitive(UnityEngine.PrimitiveType.Sphere)
-            sphere.name = ponto_name
 
-            #escala relacioando ao tamanho do avatar //ignorar por enquanto pois ainda nao medi isso
-            avatarScaleFactor = 1.0
+# Get the Animator component from the avatar
+avatar = UnityEngine.GameObject.Find("Ch24_nonPBR")  # Find the Mixamo avatar in your scene
+animator = avatar.GetComponent(UnityEngine.Animator)
 
-            #transformacao da posicao das esferas
-            sphere.transform.position = UnityEngine.Vector3(coordinates['x'] * avatarScaleFactor, 1.0 - coordinates['y'] * avatarScaleFactor, -coordinates['z'] * avatarScaleFactor) 
+# Access the head bone of the avatar (this is where we'll apply the retargeting for the nose landmark)
+headBone = animator.GetBoneTransform(UnityEngine.HumanBodyBones.Head)
 
-            scale_factor = 0.05
-            sphere.transform.localScale = UnityEngine.Vector3(scale_factor, scale_factor, scale_factor)
-            sphere_renderer = sphere.GetComponent(UnityEngine.Renderer)
-            sphere_renderer.material.color = UnityEngine.Color.red
+# Variable to store current frame index
+current_frame_index = 0
 
-            spheres[ponto_name] = sphere
+# Get all the landmarks for every frame
+landmarks_frames = data['landmarks_quadros']
 
-# Time tracking
-start_time = UnityEngine.Time.time
-delay = 10.0  # 10 seconds delay
+avatarScaleFactor = 1.0
 
-# Move spheres after the delay
-def update():
-    current_time = UnityEngine.Time.time
-    if current_time - start_time >= delay:
-        for i in range(1, len(data['landmarks_quadros'])):
-            current_frame = data['landmarks_quadros'][i]
+# Function to convert MediaPipe coordinates to Unity space
+def convert_mediapipe_to_unity(mediapipe_coordinates, scale_factor, avatar_offset):
+    # Extract MediaPipe coordinates (x, y, z)
+    mediapipe_x = mediapipe_coordinates['x']
+    mediapipe_y = mediapipe_coordinates['y']
+    mediapipe_z = mediapipe_coordinates['z']
 
-            for quadro_name, pontos in current_frame.items():
-                for ponto in pontos:
-                    for ponto_name, new_coordinates in ponto.items():
-                        if ponto_name in spheres:
-                            sphere = spheres[ponto_name]
-                            sphere.transform.position = UnityEngine.Vector3(new_coordinates['x'], new_coordinates['y'], new_coordinates['z'])
+    # Step 1: Invert the y-axis for Unity
+    unity_y = 1.0 - mediapipe_y
 
-            UnityEngine.Debug.Log(f"Updated positions for frame {i}")
-        # Reset the start_time to apply delay before the next frame
-        start_time = current_time
+    # Step 2: Scale the coordinates to match Unity's world space
+    unity_x = mediapipe_x * scale_factor
+    unity_y *= scale_factor
+    unity_z = -mediapipe_z * scale_factor  # Flipping z-axis for Unity
 
-UnityEngine.Debug.Log("Movement script initialized.")
+    # Return as Unity Vector3
+    return UnityEngine.Vector3(unity_x, unity_y, unity_z)
+
+# Function to update head rotation based on the current frame's landmarks
+def update_head_rotation():
+    global current_frame_index
+    
+    if current_frame_index >= len(landmarks_frames):
+        UnityEngine.Debug.Log("All frames processed.")
+        return
+
+    # Get the current frame's landmarks
+    current_frame = landmarks_frames[current_frame_index]
+
+    # Look for "ponto_0 - Nariz" in the current frame
+    for quadro_name, pontos in current_frame.items():
+        for ponto in pontos:
+            for ponto_name, coordinates in ponto.items():
+                if ponto_name == "ponto_0 - Nariz":  # This is the nose landmark
+                    # Convert MediaPipe coordinates to Unity space
+                    nose_position = convert_mediapipe_to_unity(coordinates, avatarScaleFactor, avatar.transform.position)
+
+                    # Get the current head position in Unity
+                    head_position = headBone.position
+
+                    # Calculate the direction the head should face (from head to nose)
+                    direction = (nose_position - head_position).normalized
+
+                    # Use Quaternion.LookRotation to calculate the head's new rotation
+                    targetRotation = UnityEngine.Quaternion.LookRotation(direction)
+
+                    # Smoothly rotate the head bone to the new target rotation
+                    rotationSpeed = 5.0
+                    headBone.rotation = UnityEngine.Quaternion.Slerp(headBone.rotation, targetRotation, UnityEngine.Time.deltaTime * rotationSpeed)
+
+                    # Debug the new position
+                    UnityEngine.Debug.Log(f"Frame {current_frame_index}: Nose position applied to head bone at: {nose_position}")
+
+    # Move to the next frame
+    current_frame_index += 1
+
+
+# This function will be called in Unity's Update method
+def Update():
+    # Update the head rotation based on the current frame's landmarks
+    update_head_rotation()
