@@ -21,7 +21,7 @@ if 'nome_video' in data:
 else:
     UnityEngine.Debug.LogError("'nome_video' not found in JSON data.")
 
-# Create spheres and store them in a dictionary
+# Cria as esferas e as coloca dentro de um dicionario
 spheres = {}
 first_frame = data['landmarks_quadros'][0]
 for quadro_name, pontos in first_frame.items():
