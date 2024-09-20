@@ -34,7 +34,7 @@ for quadro_name, pontos in first_frame.items():
             avatarScaleFactor = 1.0
 
             #transformacao da posicao das esferas
-            sphere.transform.position = UnityEngine.Vector3(coordinates['x'] * avatarScaleFactor, 1.0 - coordinates['y'] * avatarScaleFactor, -coordinates['z'] * avatarScaleFactor) 
+            sphere.transform.position = UnityEngine.Vector3(coordinates['x'] * avatarScaleFactor, 1.0 - coordinates['y'] * avatarScaleFactor, -coordinates['z'] * 0.23) 
 
             scale_factor = 0.05
             sphere.transform.localScale = UnityEngine.Vector3(scale_factor, scale_factor, scale_factor)
