@@ -8,4 +8,9 @@ public class MPpythonJSONparser : MonoBehaviour
     {
         PythonRunner.RunFile("Assets/Scripts/MPpythonJSONparser.py");
     }
+
+    private void Update()
+    {
+        PythonRunner.RunFile("Assets/Scripts/Animation.py");
+    }
 }
