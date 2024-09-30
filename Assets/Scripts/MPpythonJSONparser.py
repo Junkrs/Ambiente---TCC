@@ -1,24 +1,23 @@
-import UnityEngine
+import UnityEngine # type: ignore
 import json
 import math
+import sys
 
 # Caminho do arquivo
 try:
     # Desktop
-    file_path = r"C:/Users/junqu/Documents/GitHub/Ambiente---TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"
-    
-    # Notebook
-    # file_path = r"C:/Users/Gabriel Junqueira/Desktop/Unity Projects/Ambiente - TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"
+    file_path = r"D:/Downloads/Ambiente---TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"
     with open(file_path, 'r') as file:
         data = json.load(file)
         UnityEngine.Debug.Log("JSON file loaded successfully!")
 except FileNotFoundError:
-     UnityEngine.Debug.LogError("The JSON file was not found at the specified path")   
+    UnityEngine.Debug.LogError("The JSON file was not found at the specified path")   
 
 # Impressao do nome do video
-if 'nome_video' in data:
-        video_name = data['nome_video']
-        UnityEngine.Debug.Log(f"Nome do video: {video_name}")
+if "nome_video" in data:  # type: ignore
+    video_name = data["nome_video"]  # type: ignore
+    UnityEngine.Debug.Log(f"Nome do video: {video_name}")
+    UnityEngine.Debug.Log(f"{data}")
 else:
     UnityEngine.Debug.LogError("'nome_video' not found in JSON data.")
 
@@ -86,7 +85,10 @@ def calculate_distance(point1, point2):
 # Cria as esferas e calcula as distâncias
 spheres = {}
 distances = []
-first_frame = data['landmarks_quadros'][0]
+first_frame = data["landmarks_quadros"]  # type: ignore
+UnityEngine.Debug.Log(f"{data['landmarks_quadros']}")
+UnityEngine.Debug.Log(f"Quantidade de pontos: {len(first_frame)}")
+
 
 for quadro_name, pontos in first_frame.items():
     for ponto in pontos:
@@ -110,11 +112,11 @@ for quadro_name, pontos in first_frame.items():
             if ponto1 not in ignored_points and ponto2 not in ignored_points:
                 point1_name = f"{ponto_name}"
                 point2_name = f"{ponto_name}"
-                
+
                 # Obtem as coordenadas dos pontos conectados
                 ponto1 = first_frame[point1_name]
                 ponto2 = first_frame[point2_name]
-                
+
                 # Calcula a distância entre os dois pontos
                 distance = calculate_distance(ponto1, ponto2)
                 distances.append((point1_name, point2_name, distance))
