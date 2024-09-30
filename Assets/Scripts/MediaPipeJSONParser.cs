@@ -32,6 +32,21 @@ public class MediaPipeJSONParser : MonoBehaviour
     private Dictionary<string, List<Dictionary<string, Vector3>>> framesLandmarks; // Para armazenar os landmarks de cada quadro
     private List<GameObject> spheres; // Esferas que representarão os pontos
     private int currentFrame = 0; // Quadro atual da animação
+    //public float avatarScaleFactor = 1.0;
+
+    private Dictionary<int, string> pointNames = new Dictionary<int, string>()
+    {
+        { 0, "Nariz" },
+        { 1, "Ombro_Esquerdo" },
+        { 2, "Ombro_Direito" },
+        { 3, "Cotovelo_Esquerdo" },
+        { 4, "Cotovelo_Direito" },
+        { 5, "Pulso_Esquerdo" },
+        { 6, "Pulso_Direito" },
+        { 7, "Quadril_Esquerdo" },
+        { 8, "Quadril_Direito" }
+    };
+
 
     void Start() {
         // Carregar o JSON
@@ -47,11 +62,23 @@ public class MediaPipeJSONParser : MonoBehaviour
         spheres = new List<GameObject>();
 
         // Inicializar as esferas para os pontos do primeiro quadro
+        int index = 0;
         foreach (var landmark in data.landmarks_quadros[0]["quadro_0"])
         {
             GameObject sphere = Instantiate(spherePrefab);
-            sphere.GetComponent<Renderer>().material.color = Color.red; // Cor da Esfera: Vermelha
-            spheres.Add(sphere);
+            sphere.GetComponent<Renderer>().material.color = Color.red; // Red color for the spheres
+
+            // Set the name of the sphere based on the point index
+            if (pointNames.ContainsKey(index))
+            {
+                sphere.name = pointNames[index];
+                spheres.Add(sphere);
+            }
+            else
+            {
+                continue;
+            }
+            index++;
         }
 
         // Armazenar os dados de cada quadro
@@ -70,7 +97,7 @@ public class MediaPipeJSONParser : MonoBehaviour
                     Dictionary<string, Vector3> landmarkData = new Dictionary<string, Vector3>();
                     foreach (var point in landmark)
                     {
-                        Vector3 pos = new Vector3(point.Value.x, point.Value.y, point.Value.z);
+                        Vector3 pos = new Vector3((point.Value.x) * 1.0f, 1.0f - (point.Value.y) * 1.0f, -(point.Value.z) * 0.23f);
                         landmarkData.Add(point.Key, pos);
                     }
                     landmarksList.Add(landmarkData);
