@@ -3,7 +3,15 @@ import torch.nn as nn
 import json
 
 # Load the JSON file (replace the path with the actual path)
-with open('C:\Users\Gabriel Junqueira\Desktop\Unity Projects\Ambiente - TCC\Assets\Resources\JSON\abacaxi_articulador1.mp4_landmarks.json', 'r') as file:
+
+# Caminhos do arquivo JSON baseado em cada dispositivo
+# desktop:
+# with open('C:\Users\junqu\Documents\GitHub\Ambiente---TCC\Assets\Resources\JSON\abacaxi_articulador1.mp4_landmarks.json', 'r') as file:
+
+# notebook:
+# with open('C:\Users\Gabriel Junqueira\Desktop\Unity Projects\Ambiente - TCC\Assets\Resources\JSON\abacaxi_articulador1.mp4_landmarks.json', 'r') as file:
+
+with open(r'C:\Users\junqu\Documents\GitHub\Ambiente---TCC\Assets\Resources\JSON\abacaxi_articulador1.mp4_landmarks.json', 'r') as file:
     data = json.load(file)
 
 # Extract the landmarks for a specific frame
@@ -15,7 +23,7 @@ landmarks = data['landmarks_quadros'][0]  # Example: First frame
 class DepthRefinementNet(nn.Module):
     def __init__(self):
         super(DepthRefinementNet, self).__init__()
-        self.fc1 = nn.Linear(3, 64)  # 3 input features (x, y, z from MediaPipe)
+        self.fc1 = nn.Linear(3, 18)  # 3 input features (x, y, z from MediaPipe)
         self.fc2 = nn.Linear(64, 128)
         self.fc3 = nn.Linear(128, 64)
         self.fc4 = nn.Linear(64, 1)  # Output refined z-coordinate
