@@ -34,6 +34,9 @@ public class MediaPipeJSONParser : MonoBehaviour
     private int currentFrame = 0; // Quadro atual da animação
     //public float avatarScaleFactor = 1.0;
 
+    private Animator animator;
+    private Transform upperArmLeft, lowerArmLeft, wristLeft;
+
     private Dictionary<int, string> pointNames = new Dictionary<int, string>()
     {
         { 0, "Nariz" },
@@ -105,6 +108,11 @@ public class MediaPipeJSONParser : MonoBehaviour
                 framesLandmarks.Add(frame.Key, landmarksList);
             }
         }
+        // Access the Animator and initialize key bones (shoulder, elbow, wrist)
+        animator = GetComponent<Animator>();
+        upperArmLeft = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+        lowerArmLeft = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
+        wristLeft = animator.GetBoneTransform(HumanBodyBones.LeftHand);
 
         StartCoroutine(AnimateSpheres());
     }
@@ -127,9 +135,39 @@ public class MediaPipeJSONParser : MonoBehaviour
             // Aguardar o próximo quadro
             yield return new WaitForSeconds(0.1f); // Ajuste a velocidade da animação
 
+            // Aplicar rotações nos ossos com base nos landmarks
+            ApplyBoneRotations();
+
             // Avançar para o próximo quadro
             currentFrame = (currentFrame + 1) % framesLandmarks.Count;
         }
+    }
+
+    // Método para aplicar rotações nos ossos
+    void ApplyBoneRotations()
+    {
+        // Pegar as posições dos landmarks (Ombro_Esquerdo, Cotovelo_Esquerdo, Pulso_Esquerdo)
+        var quadroAtual = framesLandmarks["quadro_" + currentFrame];
+
+        //Debug.Log("Debug: " + quadroAtual[1]);
+
+        Vector3 shoulderPos = quadroAtual[1]["Ombro_Esquerdo"];
+        Vector3 elbowPos = quadroAtual[3]["Cotovelo_Esquerdo"];
+        Vector3 wristPos = quadroAtual[5]["Pulso_Esquerdo"];
+
+        // Calcular a direção do braço superior (ombro -> cotovelo)
+        Vector3 upperArmDirection = (elbowPos - shoulderPos).normalized;
+        Quaternion upperArmRotation = Quaternion.LookRotation(upperArmDirection);
+        upperArmLeft.rotation = upperArmRotation;
+
+        // Calcular a direção do antebraço (cotovelo -> pulso)
+        Vector3 lowerArmDirection = (wristPos - elbowPos).normalized;
+        Quaternion lowerArmRotation = Quaternion.LookRotation(lowerArmDirection);
+        lowerArmLeft.rotation = lowerArmRotation;
+
+        // Rotacionar o pulso baseado na direção do antebraço
+        Quaternion wristRotation = Quaternion.LookRotation(lowerArmDirection);
+        wristLeft.rotation = wristRotation;
     }
 
 }
