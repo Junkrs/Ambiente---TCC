@@ -195,6 +195,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spherePrefab: {fileID: 7308226367252267546, guid: 53ba991b818a77346aa45bde5eb611aa, type: 3}
+  cylinderPrefab: {fileID: 7766512644070319275, guid: 0ddab5172edafc24b9b30dcfcea6e74c, type: 3}
 --- !u!95 &193851921
 Animator:
   serializedVersion: 5
@@ -203,7 +204,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 193851917}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 9000000, guid: 0d8ff1d84de538047845b265e29f5197, type: 3}
   m_Controller: {fileID: 9100000, guid: 2ae3cd3a5c7abea4daf76685c8dedfa6, type: 2}
   m_CullingMode: 0
@@ -286,7 +287,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0d8ff1d84de538047845b265e29f5197, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

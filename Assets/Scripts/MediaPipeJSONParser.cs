@@ -29,13 +29,12 @@ public class MediaPipeJSONParser : MonoBehaviour
     // string file_path = "D:/Downloads/Ambiente---TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json";
 
     public GameObject spherePrefab; // Prefab da esfera vermelha
+    public GameObject cylinderPrefab; // Prefab da merda do cilindro
     private Dictionary<string, List<Dictionary<string, Vector3>>> framesLandmarks; // Para armazenar os landmarks de cada quadro
     private List<GameObject> spheres; // Esferas que representarão os pontos
+    private List<GameObject> cylinders; // Cilindros que conectarão as esferas
     private int currentFrame = 0; // Quadro atual da animação
-    //public float avatarScaleFactor = 1.0;
-
-    private Animator animator;
-    private Transform upperArmLeft, lowerArmLeft, wristLeft;
+    public float avatarScaleFactor = 1.0f;
 
     private Dictionary<int, string> pointNames = new Dictionary<int, string>()
     {
@@ -50,6 +49,32 @@ public class MediaPipeJSONParser : MonoBehaviour
         { 8, "Quadril_Direito" }
     };
 
+    // Define sphere scale factors for different body parts
+    /*private Dictionary<string, Vector3> sphereScaleMap = new Dictionary<string, Vector3>()
+    {
+        { "Nariz", new Vector3(0.1f, 0.1f, 0.1f) },
+        { "Ombro_Esquerdo", new Vector3(0.3f, 0.3f, 0.3f) },
+        { "Ombro_Direito", new Vector3(0.3f, 0.3f, 0.3f) },
+        { "Cotovelo_Esquerdo", new Vector3(0.2f, 0.2f, 0.2f) },
+        { "Cotovelo_Direito", new Vector3(0.2f, 0.2f, 0.2f) },
+        { "Pulso_Esquerdo", new Vector3(0.15f, 0.15f, 0.15f) },
+        { "Pulso_Direito", new Vector3(0.15f, 0.15f, 0.15f) },
+        { "Quadril_Esquerdo", new Vector3(0.3f, 0.3f, 0.3f) },
+        { "Quadril_Direito", new Vector3(0.3f, 0.3f, 0.3f) }
+    };*/
+
+    // List of specific connections to make between spheres
+    private List<(int, int)> connections = new List<(int, int)>
+    {
+        (1, 2), // Ombro_Esquerdo -> Ombro_Direito
+        (1, 3), // Ombro_Esquerdo -> Cotovelo_Esquerdo
+        (3, 5), // Cotovelo_Esquerdo -> Pulso_Esquerdo
+        (2, 4), // Ombro_Direito -> Cotovelo_Direito
+        (4, 6), // Cotovelo_Direito -> Pulso_Direito
+        (1, 7), // Ombro_Esquerdo -> Quadril_Esquerdo
+        (2, 8), // Ombro_Direito -> Quadril_Direito
+        (7, 8)  // Quadril_Esquerdo -> Quadril_Direito
+    };
 
     void Start() {
         // Carregar o JSON
@@ -61,8 +86,9 @@ public class MediaPipeJSONParser : MonoBehaviour
         Debug.Log("Nome do vídeo: " + data.nome_video);
         Debug.Log("Quantidade de quadros: " + data.landmarks_quadros.Count);
 
-        // Preparar as esferas para os landmarks
+        // Preparar as esferas para os landmarks e os cilindros para conexão
         spheres = new List<GameObject>();
+        cylinders = new List<GameObject>();
 
         // Inicializar as esferas para os pontos do primeiro quadro
         int index = 0;
@@ -76,6 +102,12 @@ public class MediaPipeJSONParser : MonoBehaviour
             {
                 sphere.name = pointNames[index];
                 spheres.Add(sphere);
+
+                // Apply scale based on body part
+                /*if (sphereScaleMap.ContainsKey(sphere.name))
+                {
+                    sphere.transform.localScale = sphereScaleMap[sphere.name];
+                }*/
             }
             else
             {
@@ -84,38 +116,45 @@ public class MediaPipeJSONParser : MonoBehaviour
             index++;
         }
 
+        // Instantiate cylinders for each specific connection
+        var numCil = 1;
+        foreach (var connection in connections)
+        {
+            GameObject cylinder = Instantiate(cylinderPrefab);
+            cylinder.name = ("cilindro_" + numCil);
+            cylinder.GetComponent<Renderer>().material.color = Color.blue;
+            cylinders.Add(cylinder);
+            numCil++;
+        }
+
         // Armazenar os dados de cada quadro
         framesLandmarks = new Dictionary<string, List<Dictionary<string, Vector3>>>();
 
         foreach (var quadro in data.landmarks_quadros)
         {
-            Debug.Log("Quantidade de pontos do " + quadro.First().Key + ": " + quadro.Last().Value.Count);
             foreach (var frame in quadro)
             {
                 List<Dictionary<string, Vector3>> landmarksList = new List<Dictionary<string, Vector3>>();
 
                 foreach (var landmark in frame.Value)
                 {
-                    // Criar um dicionário com os valores de x, y, z
                     Dictionary<string, Vector3> landmarkData = new Dictionary<string, Vector3>();
                     foreach (var point in landmark)
                     {
                         Vector3 pos = new Vector3((point.Value.x) * 1.0f, 1.0f - (point.Value.y) * 1.0f, -(point.Value.z) * 0.23f);
                         landmarkData.Add(point.Key, pos);
+
                     }
                     landmarksList.Add(landmarkData);
                 }
                 framesLandmarks.Add(frame.Key, landmarksList);
             }
         }
-        // Access the Animator and initialize key bones (shoulder, elbow, wrist)
-        animator = GetComponent<Animator>();
-        upperArmLeft = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
-        lowerArmLeft = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
-        wristLeft = animator.GetBoneTransform(HumanBodyBones.LeftHand);
 
         StartCoroutine(AnimateSpheres());
     }
+
+
 
     // Atualizar as posições das esferas em cada quadro
     IEnumerator AnimateSpheres()
@@ -132,17 +171,37 @@ public class MediaPipeJSONParser : MonoBehaviour
                 }
             }
 
+            // Atualizar a posição e escala dos cilindros com base nas conexões específicas
+            for (int i = 0; i < connections.Count; i++)
+            {
+                var (indexA, indexB) = connections[i]; // Get the two connected spheres
+                Vector3 start = spheres[indexA].transform.position; // Start at the first sphere
+                Vector3 end = spheres[indexB].transform.position; // End at the second sphere
+
+                // Set the position of the cylinder in the middle of the two spheres
+                cylinders[i].transform.position = (start + end) / 2;
+
+                // Set the scale (length) of the cylinder based on the distance between the spheres
+                float distance = Vector3.Distance(start, end);
+                cylinders[i].transform.localScale = new Vector3(
+                    Mathf.Min(spheres[indexA - 1].transform.localScale.x, spheres[indexB - 1].transform.localScale.x), // Diameter based on smaller sphere
+                    distance / 2, // Length
+                    Mathf.Min(spheres[indexA - 1].transform.localScale.z * 0.5f, spheres[indexB - 1].transform.localScale.z * 0.5f)
+                ); // Diameter based on smaller sphere
+
+                // Set the rotation of the cylinder to point from the first sphere to the second
+                cylinders[i].transform.rotation = Quaternion.FromToRotation(Vector3.up, end - start);
+            }
+
             // Aguardar o próximo quadro
             yield return new WaitForSeconds(0.1f); // Ajuste a velocidade da animação
-
-            // Aplicar rotações nos ossos com base nos landmarks
-            ApplyBoneRotations();
 
             // Avançar para o próximo quadro
             currentFrame = (currentFrame + 1) % framesLandmarks.Count;
         }
     }
 
+    /*
     // Método para aplicar rotações nos ossos
     void ApplyBoneRotations()
     {
@@ -168,6 +227,5 @@ public class MediaPipeJSONParser : MonoBehaviour
         // Rotacionar o pulso baseado na direção do antebraço
         Quaternion wristRotation = Quaternion.LookRotation(lowerArmDirection);
         wristLeft.rotation = wristRotation;
-    }
-
+    }*/
 }
