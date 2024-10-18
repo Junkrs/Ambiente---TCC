@@ -23,7 +23,6 @@ public class Landmark
     public float z { get; set; }
 }
 
-
 public class MediaPipeJSONParser : MonoBehaviour
 {
     // string file_path = "D:/Downloads/Ambiente---TCC/Assets/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json";
@@ -31,10 +30,10 @@ public class MediaPipeJSONParser : MonoBehaviour
     public GameObject spherePrefab; // Prefab da esfera vermelha
     public GameObject cylinderPrefab; // Prefab da merda do cilindro
     private Dictionary<string, List<Dictionary<string, Vector3>>> framesLandmarks; // Para armazenar os landmarks de cada quadro
-    private List<GameObject> spheres; // Esferas que representarão os pontos
-    private List<GameObject> cylinders; // Cilindros que conectarão as esferas
+    private List<GameObject> spheres; // Esferas que representarao os pontos
+    private List<GameObject> cylinders; // Cilindros que conectarao as esferas
     private int currentFrame = 0; // Quadro atual da animação
-    public float avatarScaleFactor = 1.0f;
+    public float avatarScaleFactor = 1.0f; // Escala de distancia dos pontos do avatar
 
     private Dictionary<int, string> pointNames = new Dictionary<int, string>()
     {
@@ -45,12 +44,18 @@ public class MediaPipeJSONParser : MonoBehaviour
         { 4, "Cotovelo_Direito" },
         { 5, "Pulso_Esquerdo" },
         { 6, "Pulso_Direito" },
-        { 7, "Quadril_Esquerdo" },
-        { 8, "Quadril_Direito" }
+        { 7, "Dedo_Mindinho_Esquerdo" },
+        { 8, "Dedo_Mindinho_Direito" },
+        { 9, "Dedo_Indicador_Esquerdo" },
+        { 10, "Dedo_Indicador_Direito" },
+        { 11, "Dedao_Esquerda" },
+        { 12, "Dedao_Direita" },
+        { 13, "Quadril_Esquerdo" },
+        { 14, "Quadril_Direito" }
     };
 
     // Define sphere scale factors for different body parts
-    /*private Dictionary<string, Vector3> sphereScaleMap = new Dictionary<string, Vector3>()
+    private Dictionary<string, Vector3> sphereScaleMap = new Dictionary<string, Vector3>()
     {
         { "Nariz", new Vector3(0.1f, 0.1f, 0.1f) },
         { "Ombro_Esquerdo", new Vector3(0.3f, 0.3f, 0.3f) },
@@ -59,21 +64,35 @@ public class MediaPipeJSONParser : MonoBehaviour
         { "Cotovelo_Direito", new Vector3(0.2f, 0.2f, 0.2f) },
         { "Pulso_Esquerdo", new Vector3(0.15f, 0.15f, 0.15f) },
         { "Pulso_Direito", new Vector3(0.15f, 0.15f, 0.15f) },
-        { "Quadril_Esquerdo", new Vector3(0.3f, 0.3f, 0.3f) },
-        { "Quadril_Direito", new Vector3(0.3f, 0.3f, 0.3f) }
-    };*/
+        { "Dedo_Mindinho_Esquerdo", new Vector3(0.1f, 0.1f, 0.1f) },
+        { "Dedo_Mindinho_Direito", new Vector3(0.1f, 0.1f, 0.1f) },
+        { "Dedo_Indicador_Esquerdo", new Vector3(0.1f, 0.1f, 0.1f) },
+        { "Dedo_Indicador_Direito", new Vector3(0.1f, 0.1f, 0.1f) },
+        { "Dedao_Esquerda", new Vector3(0.1f, 0.1f, 0.1f) },
+        { "Dedao_Direita", new Vector3(0.1f, 0.1f, 0.1f) },
+        { "Quadril_Esquerdo", new Vector3(0.25f, 0.25f, 0.25f) },
+        { "Quadril_Direito", new Vector3(0.25f, 0.25f, 0.25f) }
+    };
 
     // List of specific connections to make between spheres
     private List<(int, int)> connections = new List<(int, int)>
     {
-        (1, 2), // Ombro_Esquerdo -> Ombro_Direito
-        (1, 3), // Ombro_Esquerdo -> Cotovelo_Esquerdo
-        (3, 5), // Cotovelo_Esquerdo -> Pulso_Esquerdo
-        (2, 4), // Ombro_Direito -> Cotovelo_Direito
-        (4, 6), // Cotovelo_Direito -> Pulso_Direito
-        (1, 7), // Ombro_Esquerdo -> Quadril_Esquerdo
-        (2, 8), // Ombro_Direito -> Quadril_Direito
-        (7, 8)  // Quadril_Esquerdo -> Quadril_Direito
+        (1, 2),  // Ombro_Esquerdo -> Ombro_Direito
+        (1, 13), // Ombro_Esquerdo -> Quadril_Esquerdo
+        (1, 3),  // Ombro_Esquerdo -> Cotovelo_Esquerdo
+        (2, 4),  // Ombro_Direito -> Cotovelo_Direito
+        (2, 14), // Ombro_Direito -> Quadril_Direito
+        (3, 5),  // Cotovelo_Esquerdo -> Pulso_Esquerdo
+        (4, 6),  // Cotovelo_Direito -> Pulso_Direito
+        (5, 7),  // Pulso_Esquerdo -> Dedo_Mindinho_Esquerdo
+        (5, 9),  // Pulso_Esquerdo -> Dedo_Indicador_Esquerdo
+        (5, 11), // Pulso_Esquerdo -> Dedao_Esquerda
+        (7, 9),  // Dedo_Mindinho_Esquerdo -> Dedo_Indicador_Esquerdo
+        (6, 8),  // Pulso_Direito -> Dedo_Mindinho_Direito
+        (6, 10), // Pulso_Direito -> Dedo_Indicador_Direito
+        (6, 12), // Pulso_Direito -> Dedao_Direita
+        (8, 10), // Dedo_Mindinho_Direito -> Dedo_Indicador_Direito
+        (13, 14) // Quadril_Esquerdo -> Quadril_Direito
     };
 
     void Start() {
@@ -86,45 +105,107 @@ public class MediaPipeJSONParser : MonoBehaviour
         Debug.Log("Nome do vídeo: " + data.nome_video);
         Debug.Log("Quantidade de quadros: " + data.landmarks_quadros.Count);
 
+        // Create a parent GameObject to hold all the spheres
+        GameObject parentObject = new GameObject("EsqueletoAvatar");
+
+        // Create a parent GameObject to hold all the cylinders
+        GameObject cylinderParentObject = new GameObject("Conectores");
+
         // Preparar as esferas para os landmarks e os cilindros para conexão
         spheres = new List<GameObject>();
         cylinders = new List<GameObject>();
 
-        // Inicializar as esferas para os pontos do primeiro quadro
+        // Define parent-child relationships for the hierarchy (starting from the shoulders)
+        Dictionary<string, GameObject> parentMap = new Dictionary<string, GameObject>();
+
+        // Create the spheres
         int index = 0;
         foreach (var landmark in data.landmarks_quadros[0]["quadro_0"])
         {
             GameObject sphere = Instantiate(spherePrefab);
-            sphere.GetComponent<Renderer>().material.color = Color.red; // Red color for the spheres
+            sphere.GetComponent<Renderer>().material.color = Color.red;
 
-            // Set the name of the sphere based on the point index
             if (pointNames.ContainsKey(index))
             {
-                sphere.name = pointNames[index];
+                string sphereName = pointNames[index];
+                sphere.name = sphereName;
                 spheres.Add(sphere);
 
                 // Apply scale based on body part
-                /*if (sphereScaleMap.ContainsKey(sphere.name))
+                if (sphereScaleMap.ContainsKey(sphereName))
                 {
-                    sphere.transform.localScale = sphereScaleMap[sphere.name];
-                }*/
+                    sphere.transform.localScale = sphereScaleMap[sphereName];
+                }
+
+                // Create a dummy GameObject for hierarchy without affecting the scale
+                GameObject dummyParent = new GameObject(sphereName + "_Holder");
+                dummyParent.transform.SetParent(parentObject.transform); // Attach dummy to the overall parent
+
+                // Add the sphere to the dummy object (which doesn't have any scale transformations)
+                sphere.transform.SetParent(dummyParent.transform, false);
+
+                // Establish hierarchy logic
+                if (sphereName.Contains("Ombro")) // Ombro_Esquerdo or Ombro_Direito as top-level parents
+                {
+                    parentMap[sphereName] = dummyParent; // Store dummy as the top-level parent
+                }
+                else if (sphereName.Contains("Cotovelo") || sphereName.Contains("Quadril"))
+                {
+                    // Assign Cotovelo or Quadril to respective shoulder or hips dummy
+                    if (sphereName.Contains("Esquerdo"))
+                        dummyParent.transform.SetParent(parentMap["Ombro_Esquerdo"].transform, false); // Use dummy for hierarchy
+                    else if (sphereName.Contains("Direito"))
+                        dummyParent.transform.SetParent(parentMap["Ombro_Direito"].transform, false); // Use dummy for hierarchy
+
+                    parentMap[sphereName] = dummyParent; // Store dummy in parent map for further children
+                }
+                else if (sphereName.Contains("Pulso"))
+                {
+                    // Assign Pulso and Dedos to respective elbows dummy
+                    if (sphereName.Contains("Esquerdo"))
+                        dummyParent.transform.SetParent(parentMap["Cotovelo_Esquerdo"].transform, false); // Use dummy for hierarchy
+                    else if (sphereName.Contains("Direito"))
+                        dummyParent.transform.SetParent(parentMap["Cotovelo_Direito"].transform, false); // Use dummy for hierarchy
+
+                    parentMap[sphereName] = dummyParent; // Store dummy in parent map for further children
+                }
+                else if (sphereName.Contains("Dedao") || sphereName.Contains("Dedo"))
+                {
+                    // Assign Dedos to respective pulses dummy
+                    if (sphereName.Contains("Esquerdo"))
+                        dummyParent.transform.SetParent(parentMap["Pulso_Esquerdo"].transform, false); // Use dummy for hierarchy
+                    else if (sphereName.Contains("Direito"))
+                        dummyParent.transform.SetParent(parentMap["Pulso_Direito"].transform, false); // Use dummy for hierarchy
+                }
             }
-            else
-            {
-                continue;
-            }
+
             index++;
         }
 
         // Instantiate cylinders for each specific connection
-        var numCil = 1;
         foreach (var connection in connections)
         {
             GameObject cylinder = Instantiate(cylinderPrefab);
-            cylinder.name = ("cilindro_" + numCil);
-            cylinder.GetComponent<Renderer>().material.color = Color.blue;
+
+            // Get the indices for the two spheres being connected
+            int sphereIndex1 = connection.Item1;
+            int sphereIndex2 = connection.Item2;
+
+            // Get the names of the spheres being connected
+            string sphereName1 = spheres[sphereIndex1].name;
+            string sphereName2 = spheres[sphereIndex2].name;
+
+            // Name the cylinder according to the spheres it connects
+            cylinder.name = $"Conector: {sphereName1} -> {sphereName2}";
+
+            // Set the cylinder color
+            cylinder.GetComponent<Renderer>().material.color = Color.gray;
+
+            // Add the cylinder to the parent GameObject
+            cylinder.transform.SetParent(cylinderParentObject.transform);
+
+            // Add the cylinder to the list
             cylinders.Add(cylinder);
-            numCil++;
         }
 
         // Armazenar os dados de cada quadro
@@ -141,7 +222,7 @@ public class MediaPipeJSONParser : MonoBehaviour
                     Dictionary<string, Vector3> landmarkData = new Dictionary<string, Vector3>();
                     foreach (var point in landmark)
                     {
-                        Vector3 pos = new Vector3((point.Value.x) * 1.0f, 1.0f - (point.Value.y) * 1.0f, -(point.Value.z) * 0.23f);
+                        Vector3 pos = new Vector3((point.Value.x) * 1.0f * avatarScaleFactor, 1.0f - (point.Value.y) * 1.0f * avatarScaleFactor, -(point.Value.z) * 0.23f * avatarScaleFactor);
                         landmarkData.Add(point.Key, pos);
 
                     }
@@ -153,8 +234,6 @@ public class MediaPipeJSONParser : MonoBehaviour
 
         StartCoroutine(AnimateSpheres());
     }
-
-
 
     // Atualizar as posições das esferas em cada quadro
     IEnumerator AnimateSpheres()
@@ -184,9 +263,9 @@ public class MediaPipeJSONParser : MonoBehaviour
                 // Set the scale (length) of the cylinder based on the distance between the spheres
                 float distance = Vector3.Distance(start, end);
                 cylinders[i].transform.localScale = new Vector3(
-                    Mathf.Min(spheres[indexA - 1].transform.localScale.x, spheres[indexB - 1].transform.localScale.x), // Diameter based on smaller sphere
+                    Mathf.Min(spheres[indexA].transform.localScale.x * 0.5f, spheres[indexB].transform.localScale.x * 0.5f), // Diameter based on smaller sphere
                     distance / 2, // Length
-                    Mathf.Min(spheres[indexA - 1].transform.localScale.z * 0.5f, spheres[indexB - 1].transform.localScale.z * 0.5f)
+                    Mathf.Min(spheres[indexA].transform.localScale.z * 0.5f, spheres[indexB].transform.localScale.z * 0.5f)
                 ); // Diameter based on smaller sphere
 
                 // Set the rotation of the cylinder to point from the first sphere to the second
@@ -200,32 +279,4 @@ public class MediaPipeJSONParser : MonoBehaviour
             currentFrame = (currentFrame + 1) % framesLandmarks.Count;
         }
     }
-
-    /*
-    // Método para aplicar rotações nos ossos
-    void ApplyBoneRotations()
-    {
-        // Pegar as posições dos landmarks (Ombro_Esquerdo, Cotovelo_Esquerdo, Pulso_Esquerdo)
-        var quadroAtual = framesLandmarks["quadro_" + currentFrame];
-
-        //Debug.Log("Debug: " + quadroAtual[1]);
-
-        Vector3 shoulderPos = quadroAtual[1]["Ombro_Esquerdo"];
-        Vector3 elbowPos = quadroAtual[3]["Cotovelo_Esquerdo"];
-        Vector3 wristPos = quadroAtual[5]["Pulso_Esquerdo"];
-
-        // Calcular a direção do braço superior (ombro -> cotovelo)
-        Vector3 upperArmDirection = (elbowPos - shoulderPos).normalized;
-        Quaternion upperArmRotation = Quaternion.LookRotation(upperArmDirection);
-        upperArmLeft.rotation = upperArmRotation;
-
-        // Calcular a direção do antebraço (cotovelo -> pulso)
-        Vector3 lowerArmDirection = (wristPos - elbowPos).normalized;
-        Quaternion lowerArmRotation = Quaternion.LookRotation(lowerArmDirection);
-        lowerArmLeft.rotation = lowerArmRotation;
-
-        // Rotacionar o pulso baseado na direção do antebraço
-        Quaternion wristRotation = Quaternion.LookRotation(lowerArmDirection);
-        wristLeft.rotation = wristRotation;
-    }*/
 }
