@@ -57,7 +57,7 @@ public class MediaPipeJSONParser : MonoBehaviour
     // Define sphere scale factors for different body parts
     private Dictionary<string, Vector3> sphereScaleMap = new Dictionary<string, Vector3>()
     {
-        { "Nariz", new Vector3(0.1f, 0.1f, 0.1f) },
+        { "Nariz", new Vector3(0.5f, 0.5f, 0.5f) },
         { "Ombro_Esquerdo", new Vector3(0.3f, 0.3f, 0.3f) },
         { "Ombro_Direito", new Vector3(0.3f, 0.3f, 0.3f) },
         { "Cotovelo_Esquerdo", new Vector3(0.2f, 0.2f, 0.2f) },
@@ -95,6 +95,26 @@ public class MediaPipeJSONParser : MonoBehaviour
         (13, 14) // Quadril_Esquerdo -> Quadril_Direito
     };
 
+    // Define colors for each body part
+    private Dictionary<string, Color> sphereColorMap = new Dictionary<string, Color>()
+    {
+        { "Nariz", Color.red },
+        { "Ombro_Esquerdo", Color.blue },
+        { "Ombro_Direito", Color.blue },
+        { "Cotovelo_Esquerdo", Color.green },
+        { "Cotovelo_Direito", Color.green },
+        { "Pulso_Esquerdo", Color.yellow },
+        { "Pulso_Direito", Color.yellow },
+        { "Dedo_Mindinho_Esquerdo", Color.magenta },
+        { "Dedo_Mindinho_Direito", Color.magenta },
+        { "Dedo_Indicador_Esquerdo", Color.cyan },
+        { "Dedo_Indicador_Direito", Color.cyan },
+        { "Dedao_Esquerda", Color.red },
+        { "Dedao_Direita", Color.red },
+        { "Quadril_Esquerdo", Color.blue },
+        { "Quadril_Direito", Color.blue }
+    };
+
     void Start() {
         // Carregar o JSON
         string jsonPath = Application.dataPath + "/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"; // Coloque o arquivo JSON na pasta "Assets"
@@ -115,6 +135,11 @@ public class MediaPipeJSONParser : MonoBehaviour
         spheres = new List<GameObject>();
         cylinders = new List<GameObject>();
 
+        // Variables to store the positions of the shoulders and nose
+        Vector3 ombroEsquerdoPosition = Vector3.zero;
+        Vector3 ombroDireitoPosition = Vector3.zero;
+        Vector3 nosePosition = Vector3.zero;
+
         // Define parent-child relationships for the hierarchy (starting from the shoulders)
         Dictionary<string, GameObject> parentMap = new Dictionary<string, GameObject>();
 
@@ -123,7 +148,6 @@ public class MediaPipeJSONParser : MonoBehaviour
         foreach (var landmark in data.landmarks_quadros[0]["quadro_0"])
         {
             GameObject sphere = Instantiate(spherePrefab);
-            sphere.GetComponent<Renderer>().material.color = Color.red;
 
             if (pointNames.ContainsKey(index))
             {
@@ -135,6 +159,31 @@ public class MediaPipeJSONParser : MonoBehaviour
                 if (sphereScaleMap.ContainsKey(sphereName))
                 {
                     sphere.transform.localScale = sphereScaleMap[sphereName];
+                }
+
+                // Get shoulder and nose positions
+                if (sphereName == "Ombro_Esquerdo")
+                {
+                    ombroEsquerdoPosition = sphere.transform.position;
+                }
+                else if (sphereName == "Ombro_Direito")
+                {
+                    ombroDireitoPosition = sphere.transform.position;
+                }
+                else if (sphereName == "Nariz")
+                {
+                    nosePosition = sphere.transform.position;
+                }
+
+                // Apply color based on body part
+                if (sphereColorMap.ContainsKey(sphereName))
+                {
+                    sphere.GetComponent<Renderer>().material.color = sphereColorMap[sphereName];
+                }
+                else
+                {
+                    // Default color if not in the map
+                    sphere.GetComponent<Renderer>().material.color = Color.black;
                 }
 
                 // Create a dummy GameObject for hierarchy without affecting the scale
@@ -181,6 +230,38 @@ public class MediaPipeJSONParser : MonoBehaviour
 
             index++;
         }
+        /*
+        // Calculate midpoint between shoulders
+        Vector3 shoulderMidpoint = (ombroEsquerdoPosition + ombroDireitoPosition) / 2;
+
+        // Adjust the neck position: it starts above the shoulders at the midpoint
+        Vector3 neckBasePosition = shoulderMidpoint + new Vector3(0, 0.2f, 0); // Slight offset above shoulders
+
+        // Position the head relative to the nose and above the neck base
+        Vector3 headPosition = nosePosition + new Vector3(0, 0.3f, 0);  // Offset the head slightly above the nose
+
+        // Create the neck (cylinder) between the midpoint of the shoulders and the bottom of the head
+        GameObject neck = Instantiate(cylinderPrefab);
+        neck.name = "Conector: pescoco -> cabeca";
+
+        // Set neck position and scale (height)
+        float neckHeight = Vector3.Distance(neckBasePosition, headPosition) / 2;
+        neck.transform.position = (neckBasePosition + headPosition) / 2; // Middle point for the neck
+        neck.transform.localScale = new Vector3(0.1f, neckHeight, 0.1f); // Thin cylinder for neck
+        neck.transform.rotation = Quaternion.FromToRotation(Vector3.up, headPosition - neckBasePosition);
+
+        // Parent the neck cylinder to the cylinder parent object
+        neck.transform.SetParent(cylinderParentObject.transform);
+
+        // Create the head (sphere) above the shoulders and aligned with the nose
+        GameObject head = Instantiate(spherePrefab);
+        head.name = "Cabeca";
+        head.transform.position = headPosition;
+        head.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f); // Adjust the head size
+        head.GetComponent<Renderer>().material.color = Color.white; // Give the head a distinct color
+
+        // Parent the head to the spheres parent
+        head.transform.SetParent(parentObject.transform);*/
 
         // Instantiate cylinders for each specific connection
         foreach (var connection in connections)
@@ -211,6 +292,10 @@ public class MediaPipeJSONParser : MonoBehaviour
         // Armazenar os dados de cada quadro
         framesLandmarks = new Dictionary<string, List<Dictionary<string, Vector3>>>();
 
+        // Variables to track the min and max values for calculating the center
+        Vector3 minValues = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+        Vector3 maxValues = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
         foreach (var quadro in data.landmarks_quadros)
         {
             foreach (var frame in quadro)
@@ -220,15 +305,35 @@ public class MediaPipeJSONParser : MonoBehaviour
                 foreach (var landmark in frame.Value)
                 {
                     Dictionary<string, Vector3> landmarkData = new Dictionary<string, Vector3>();
+                    
                     foreach (var point in landmark)
                     {
                         Vector3 pos = new Vector3((point.Value.x) * 1.0f * avatarScaleFactor, 1.0f - (point.Value.y) * 1.0f * avatarScaleFactor, -(point.Value.z) * 0.23f * avatarScaleFactor);
                         landmarkData.Add(point.Key, pos);
 
+                        // Track the minimum and maximum values for x, y, and z
+                        minValues = Vector3.Min(minValues, pos);
+                        maxValues = Vector3.Max(maxValues, pos);
                     }
                     landmarksList.Add(landmarkData);
                 }
                 framesLandmarks.Add(frame.Key, landmarksList);
+            }
+        }
+        // Calculate the center of the body
+        Vector3 bodyCenter = (minValues + maxValues) / 2;
+
+        // Apply the offset to center all the landmarks
+        foreach (var quadro in framesLandmarks.Keys.ToList())
+        {
+            for (int i = 0; i < framesLandmarks[quadro].Count; i++)
+            {
+                var landmarksList = framesLandmarks[quadro][i];
+                foreach (var point in landmarksList.Keys.ToList())
+                {
+                    // Offset each position by the calculated center
+                    landmarksList[point] -= bodyCenter;
+                }
             }
         }
 
