@@ -34,6 +34,7 @@ public class MediaPipeJSONParser : MonoBehaviour
     private List<GameObject> cylinders; // Cilindros que conectarao as esferas
     private int currentFrame = 0; // Quadro atual da animação
     public float avatarScaleFactor = 1.0f; // Escala de distancia dos pontos do avatar
+    public string sinalDesejado;
 
     private Dictionary<int, string> pointNames = new Dictionary<int, string>()
     {
@@ -117,10 +118,10 @@ public class MediaPipeJSONParser : MonoBehaviour
 
     void Start() {
         // Carregar o JSON
-        string jsonPath = Application.dataPath + "/Resources/JSON/abacaxi_articulador1.mp4_landmarks.json"; // Coloque o arquivo JSON na pasta "Assets"
-        string jsonString = File.ReadAllText(jsonPath);
+        string jsonPath = Application.dataPath + "/Resources/JSON/" + sinalDesejado + ".mp4_landmarks.json";
 
-        // Decodificar o JSON em uma estrutura apropriada
+        string jsonString = File.ReadAllText(jsonPath);
+        Debug.Log("Loaded JSON: " + sinalDesejado);
         var data = JsonConvert.DeserializeObject<RootObject>(jsonString);
         Debug.Log("Nome do vídeo: " + data.nome_video);
         Debug.Log("Quantidade de quadros: " + data.landmarks_quadros.Count);
@@ -155,10 +156,11 @@ public class MediaPipeJSONParser : MonoBehaviour
                 sphere.name = sphereName;
                 spheres.Add(sphere);
 
-                // Apply scale based on body part
+                // Apply scale and color based on body part
                 if (sphereScaleMap.ContainsKey(sphereName))
                 {
                     sphere.transform.localScale = sphereScaleMap[sphereName];
+                    sphere.GetComponent<Renderer>().material.color = sphereColorMap[sphereName];
                 }
 
                 // Get shoulder and nose positions
@@ -173,17 +175,6 @@ public class MediaPipeJSONParser : MonoBehaviour
                 else if (sphereName == "Nariz")
                 {
                     nosePosition = sphere.transform.position;
-                }
-
-                // Apply color based on body part
-                if (sphereColorMap.ContainsKey(sphereName))
-                {
-                    sphere.GetComponent<Renderer>().material.color = sphereColorMap[sphereName];
-                }
-                else
-                {
-                    // Default color if not in the map
-                    sphere.GetComponent<Renderer>().material.color = Color.black;
                 }
 
                 // Create a dummy GameObject for hierarchy without affecting the scale
@@ -230,38 +221,6 @@ public class MediaPipeJSONParser : MonoBehaviour
 
             index++;
         }
-        /*
-        // Calculate midpoint between shoulders
-        Vector3 shoulderMidpoint = (ombroEsquerdoPosition + ombroDireitoPosition) / 2;
-
-        // Adjust the neck position: it starts above the shoulders at the midpoint
-        Vector3 neckBasePosition = shoulderMidpoint + new Vector3(0, 0.2f, 0); // Slight offset above shoulders
-
-        // Position the head relative to the nose and above the neck base
-        Vector3 headPosition = nosePosition + new Vector3(0, 0.3f, 0);  // Offset the head slightly above the nose
-
-        // Create the neck (cylinder) between the midpoint of the shoulders and the bottom of the head
-        GameObject neck = Instantiate(cylinderPrefab);
-        neck.name = "Conector: pescoco -> cabeca";
-
-        // Set neck position and scale (height)
-        float neckHeight = Vector3.Distance(neckBasePosition, headPosition) / 2;
-        neck.transform.position = (neckBasePosition + headPosition) / 2; // Middle point for the neck
-        neck.transform.localScale = new Vector3(0.1f, neckHeight, 0.1f); // Thin cylinder for neck
-        neck.transform.rotation = Quaternion.FromToRotation(Vector3.up, headPosition - neckBasePosition);
-
-        // Parent the neck cylinder to the cylinder parent object
-        neck.transform.SetParent(cylinderParentObject.transform);
-
-        // Create the head (sphere) above the shoulders and aligned with the nose
-        GameObject head = Instantiate(spherePrefab);
-        head.name = "Cabeca";
-        head.transform.position = headPosition;
-        head.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f); // Adjust the head size
-        head.GetComponent<Renderer>().material.color = Color.white; // Give the head a distinct color
-
-        // Parent the head to the spheres parent
-        head.transform.SetParent(parentObject.transform);*/
 
         // Instantiate cylinders for each specific connection
         foreach (var connection in connections)
