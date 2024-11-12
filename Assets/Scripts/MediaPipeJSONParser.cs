@@ -362,7 +362,7 @@ public class MediaPipeJSONParser : MonoBehaviour
             }
 
             // Aguardar o próximo quadro
-            yield return new WaitForSeconds(0.1f); // Ajuste a velocidade da animação
+            yield return new WaitForSeconds(0.05f); // Ajuste a velocidade da animação
 
             // Avançar para o próximo quadro
             currentFrame = (currentFrame + 1) % framesLandmarks.Count;
