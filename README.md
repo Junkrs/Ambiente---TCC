@@ -1,5 +1,5 @@
 # Ambiente - TCC ![Unity](https://img.shields.io/badge/unity-%23000000.svg?style=for-the-badge&logo=unity&logoColor=white)![C#](https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white)
-Trabalho de Conclusão de Curso desenvolvido para minha graduação em Ciência da Computação na [UNESP](https://www.fc.unesp.br/#!/departamentos/computacao/cursos-de-graduao/bacharelado-em-ciencia-da-computacao/).
+Parte do Trabalho de Conclusão de Curso desenvolvido para minha graduação em Ciência da Computação na [UNESP](https://www.fc.unesp.br/#!/departamentos/computacao/cursos-de-graduao/bacharelado-em-ciencia-da-computacao/).
 > [!IMPORTANT]
 > Este repositório corresponde à renderização e animação dos esqueletos dos avatares, para o processamento dos _datasets_ e diferentes sinais de LIBRAS, utilize o código disponibilizado [neste repositório](https://github.com/Junkrs/Processamento-MediaPipe). :leftwards_arrow_with_hook:
 
